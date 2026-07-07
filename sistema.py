@@ -23,6 +23,9 @@ class SistemaTareas:
     def buscar_tarea(self, id_tarea):
         return ArbolAVL.buscar(self.avl_raiz, id_tarea)
 
+    def listar_tareas(self):
+        return ArbolAVL.in_order(self.avl_raiz)
+
     def eliminar_tarea_especifica(self, id_tarea):
         t = self.buscar_tarea(id_tarea)
         if t is None:
