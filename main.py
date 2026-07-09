@@ -96,7 +96,7 @@ class App:
         ).pack(side="left", expand=True, fill="x", padx=(0, 6))
         ttk.Button(
             botones,
-            text="✓  Completar urgente",
+            text="✓  Completar tarea más urgente",
             style="Success.TButton",
             command=self.completar_urgente,
         ).pack(side="left", expand=True, fill="x", padx=(6, 0))
