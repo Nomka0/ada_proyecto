@@ -4,9 +4,9 @@ Proyecto de estructuras de datos que integra un **Max-Heap** (cola de prioridad)
 
 ## Integrantes
 
--  santi 
+-  Santiago Vega Monroy // 2064614
 -  Kevin Javier Manzano Garcia // 1925720 
--  juan josé
+-  Juan José Bolaños Delgado // 2617324
 
 ---
 
