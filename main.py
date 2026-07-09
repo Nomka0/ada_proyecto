@@ -28,6 +28,99 @@ class _C:
     PRIO_SEL = "#45475a"
 
 
+class Calendario:
+    """Mini-calendario en tkinter puro (sin dependencias).
+
+    popup modal: elige una fecha y la escribe como YYYY-MM-DD en el Entry dado.
+    ponytail: sin tkcalendar para no añadir dependencia; cubre lo pedido.
+    """
+
+    def __init__(self, parent, entry_destino, inicio=None):
+        import calendar
+        from datetime import date
+
+        self.entry = entry_destino
+        self.cal = calendar
+        self.hoy = date.today()
+        if inicio:
+            try:
+                y, m, _d = map(int, inicio.split("-"))
+                self.anio, self.mes = y, m
+            except ValueError:
+                self.anio, self.mes = self.hoy.year, self.hoy.month
+        else:
+            self.anio, self.mes = self.hoy.year, self.hoy.month
+
+        self.win = tk.Toplevel(parent)
+        self.win.title("Selecciona una fecha")
+        self.win.transient(parent)
+        self.win.grab_set()
+        self.win.configure(background=_C.SURFACE)
+        self.win.resizable(False, False)
+
+        top = tk.Frame(self.win, bg=_C.SURFACE)
+        top.pack(fill="x", padx=10, pady=(10, 4))
+        tk.Button(top, text="‹", bg=_C.SURFACE2, fg=_C.TEXT, relief="flat",
+                  command=self._mes_ant).pack(side="left")
+        self.titulo = tk.Label(top, font=("Segoe UI", 11, "bold"),
+                               bg=_C.SURFACE, fg=_C.TEXT)
+        self.titulo.pack(side="left", expand=True, fill="x")
+        tk.Button(top, text="›", bg=_C.SURFACE2, fg=_C.TEXT, relief="flat",
+                  command=self._mes_sig).pack(side="right")
+
+        self.grid = tk.Frame(self.win, bg=_C.SURFACE)
+        self.grid.pack(padx=10, pady=(0, 10))
+        self._dibujar()
+
+    def _dibujar(self):
+        for w in self.grid.winfo_children():
+            w.destroy()
+        nombre = self.cal.month_name[self.mes]
+        self.titulo.config(text=f"{nombre} {self.anio}")
+        for col, d in enumerate(("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do")):
+            tk.Label(self.grid, text=d, font=("Segoe UI", 8, "bold"),
+                     bg=_C.SURFACE, fg=_C.SUBTLE, width=4).grid(
+                row=0, column=col, padx=1, pady=2)
+
+        dias = self.cal.monthcalendar(self.anio, self.mes)
+        for r, semana in enumerate(dias, start=1):
+            for c, dia in enumerate(semana):
+                if dia == 0:
+                    tk.Label(self.grid, text="", bg=_C.SURFACE, width=4
+                             ).grid(row=r, column=c, padx=1, pady=1)
+                else:
+                    es_hoy = (dia == self.hoy.day and self.mes == self.hoy.month
+                              and self.anio == self.hoy.year)
+                    b = tk.Button(
+                        self.grid, text=str(dia), width=4, relief="flat",
+                        bg=_C.ACCENT if es_hoy else _C.SURFACE2,
+                        fg=_C.BG if es_hoy else _C.TEXT,
+                        activebackground=_C.ACCENT_HOVER,
+                        activeforeground=_C.BG,
+                        command=lambda d=dia: self._elegir(d),
+                    )
+                    b.grid(row=r, column=c, padx=1, pady=1)
+
+    def _mes_ant(self):
+        self.mes -= 1
+        if self.mes == 0:
+            self.mes, self.anio = 12, self.anio - 1
+        self._dibujar()
+
+    def _mes_sig(self):
+        self.mes += 1
+        if self.mes == 13:
+            self.mes, self.anio = 1, self.anio + 1
+        self._dibujar()
+
+    def _elegir(self, dia):
+        self.entry.delete(0, tk.END)
+        self.entry.insert(
+            0, f"{self.anio:04d}-{self.mes:02d}-{dia:02d}"
+        )
+        self.win.destroy()
+
+
 class App:
     def __init__(self, root):
         self.sistema = SistemaTareas()
@@ -82,8 +175,15 @@ class App:
         ttk.Label(form, text="Vence", style="Field.TLabel").grid(
             row=3, column=0, sticky="e", padx=(0, 10), pady=6
         )
-        self.fecha_entry = ttk.Entry(form)
-        self.fecha_entry.grid(row=3, column=1, sticky="ew", pady=6)
+        fecha_fila = ttk.Frame(form, style="Card.TFrame")
+        fecha_fila.grid(row=3, column=1, sticky="ew", pady=6)
+        fecha_fila.columnconfigure(0, weight=1)
+        self.fecha_entry = ttk.Entry(fecha_fila)
+        self.fecha_entry.grid(row=0, column=0, sticky="ew")
+        ttk.Button(fecha_fila, text="📅", width=4,
+                   command=lambda: self._abrir_calendario()).grid(
+            row=0, column=1, padx=(6, 0)
+        )
 
         for e in (self.id_entry, self.desc_entry, self.fecha_entry):
             e.bind("<Return>", lambda _evt: self.agregar())
@@ -143,11 +243,11 @@ class App:
             height=12,
         )
         self.lista.heading("prio", text="Prioridad")
-        self.lista.heading("desc", text="Descripción")
-        self.lista.heading("fecha", text="Vence")
+        self.lista.heading("desc", text="Descripción", anchor="center")
+        self.lista.heading("fecha", text="Vence", anchor="center")
         self.lista.heading("id", text="ID")
         self.lista.column("prio", width=92, anchor="w")
-        self.lista.column("desc", width=240, anchor="w")
+        self.lista.column("desc", width=240, anchor="center")
         self.lista.column("fecha", width=96, anchor="center")
         self.lista.column("id", width=52, anchor="center")
         self.lista.tag_configure("alta", background=_C.PRIO_HIGH)
@@ -251,6 +351,10 @@ class App:
         card = ttk.Frame(parent, style="Card.TFrame")
         card.pack(fill="x", pady=(0, 14))
         return card
+
+    def _abrir_calendario(self):
+        Calendario(self.id_entry.winfo_toplevel(), self.fecha_entry,
+                   inicio=self.fecha_entry.get().strip() or None)
 
     # ----- Acciones -----
     def agregar(self):
