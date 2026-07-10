@@ -229,7 +229,7 @@ class App:
         )
         ttk.Button(
             toolbar,
-            text="Eliminar",
+            text="✖ Eliminar",
             style="Danger.TButton",
             command=self.eliminar,
         ).pack(side="right")
@@ -327,11 +327,11 @@ class App:
         style.configure("Success.TButton", background=_C.SUCCESS,
                         foreground=_C.BG, padding=(14, 11), font=f_btn)
         style.map("Success.TButton", background=[("active", "#c5f0b0")])
-        style.configure("Danger.TButton", background="transparent",
-                        foreground=_C.DANGER, padding=(10, 6), font=f_btn)
+        style.configure("Danger.TButton", background=_C.DANGER,
+                        foreground=_C.BG, padding=(10, 7), font=f_btn)
         style.map("Danger.TButton",
-                  background=[("active", _C.SURFACE2)],
-                  foreground=[("active", _C.DANGER)])
+                  background=[("active", "#f5a3bc")],
+                  foreground=[("active", _C.BG)])
 
         # Treeview
         style.configure("Treeview", background=_C.SURFACE,
